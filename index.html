@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Códigos</title>
+</head>
+<body>
+  <h1>Generador de Códigos Únicos</h1>
+  <button onclick="generateCode()">Generar Código</button>
+  <p>Tu código único es: <span id="code">Aún no generado</span></p>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+
+  <script>
+    // Tu configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8GEgu7RdHmv1zy6pUImCcmJcVjtS63AI",
+      authDomain: "nosotros-86e9d.firebaseapp.com",
+      projectId: "nosotros-86e9d",
+      storageBucket: "nosotros-86e9d.appspot.com",
+      messagingSenderId: "90188190025",
+      appId: "1:90188190025:web:49c6ce8f06701ff34b4a98"
+    };
+
+    // Inicializar Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Función para generar y almacenar un código único
+    async function generateCode() {
+      let uniqueCode = 'ID-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+      // Verificar si el código ya existe en Firestore
+      let snapshot = await db.collection('codes').where('code', '==', uniqueCode).get();
+
+      // Si el código ya existe, generar uno nuevo
+      while (!snapshot.empty) {
+        uniqueCode = 'ID-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        snapshot = await db.collection('codes').where('code', '==', uniqueCode).get();
+      }
+
+      // Almacenar el código en Firestore
+      await db.collection('codes').add({
+        code: uniqueCode,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Mostrar el código en la página
+      document.getElementById('code').textContent = uniqueCode;
+    }
+  </script>
+</body>
+</html>
