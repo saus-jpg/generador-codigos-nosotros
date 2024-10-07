@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de ID Único</title>
+    <script type="module">
+        // Importamos Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
+
+        // Configuración de Firebase (credenciales proporcionadas)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8GEgu7RdHmv1zy6pUImCcmJcVjtS63AI",
+            authDomain: "nosotros-86e9d.firebaseapp.com",
+            projectId: "nosotros-86e9d",
+            storageBucket: "nosotros-86e9d.appspot.com",
+            messagingSenderId: "90188190025",
+            appId: "1:90188190025:web:49c6ce8f06701ff34b4a98"
+        };
+
+        // Inicializamos Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Variable para almacenar el ID generado
+        let uniqueID = '';
+
+        // Función para generar un ID único y almacenarlo en Firestore
+        async function generarID() {
+            try {
+                // Generamos un ID basado en la hora actual y un número aleatorio
+                uniqueID = 'user-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+
+                // Verificamos si el ID ya existe en Firestore (para asegurarnos de que no haya duplicados)
+                const snapshot = await getDocs(collection(db, "users"));
+                const idsExistentes = snapshot.docs.map(doc => doc.data().id);
+
+                if (!idsExistentes.includes(uniqueID)) {
+                    // Si el ID no existe, lo guardamos en Firestore
+                    await addDoc(collection(db, "users"), {
+                        id: uniqueID
+                    });
+
+                    // Mostramos el ID generado
+                    document.getElementById('resultado').innerText = `ID Generado: ${uniqueID}`;
+                } else {
+                    // Si por alguna razón el ID ya existía (caso extremadamente raro), generamos otro
+                    generarID();
+                }
+            } catch (error) {
+                console.error("Error generando el ID: ", error);
+                document.getElementById('resultado').innerText = 'Error al generar el ID.';
+            }
+        }
+
+        // Función para copiar el ID al portapapeles
+        function copiarAlPortapapeles() {
+            if (uniqueID) {
+                navigator.clipboard.writeText(uniqueID).then(() => {
+                    alert("ID copiado al portapapeles");
+                }).catch(err => {
+                    console.error("Error al copiar el ID: ", err);
+                });
+            } else {
+                alert("Primero genera un ID");
+            }
+        }
+
+        // Función para descargar el ID en un archivo de texto
+        function descargarID() {
+            if (uniqueID) {
+                const blob = new Blob([uniqueID], { type: 'text/plain' });
+                const enlaceDescarga = document.createElement('a');
+                enlaceDescarga.href = URL.createObjectURL(blob);
+                enlaceDescarga.download = 'id_usuario.txt';
+                enlaceDescarga.click();
+            } else {
+                alert("Primero genera un ID");
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Generador de ID Único</h1>
+    <button onclick="generarID()">Generar ID Único</button>
+    <p id="resultado"></p>
+    <button onclick="copiarAlPortapapeles()">Copiar al Portapapeles</button>
+    <button onclick="descargarID()">Descargar ID</button>
+</body>
+</html>
